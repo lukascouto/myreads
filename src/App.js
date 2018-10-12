@@ -3,18 +3,23 @@ import {Link, Route} from 'react-router-dom'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
 import ListBooks from "./ListBooks";
+import ScrollableAnchor from 'react-scrollable-anchor';
 
 class BooksApp extends React.Component {
   state = {
       books: [],
       booksFound: [],
-      query: ''
+      query: '',
+      isLoading: true
   }
 
   componentDidMount() {
       BooksAPI.getAll()
           .then((books) => {
-          this.setState({books})
+          this.setState({
+              books,
+              isLoading: false
+          });
       })
    }
 
@@ -53,6 +58,10 @@ class BooksApp extends React.Component {
       }
    }
 
+    clearQuery = () => {
+        this.updateQuery('')
+    }
+
   /*
   Recupera o book<Objeto> e o shelf<String> do Select no componente ListBooks
   Chama o método update do BooksAPI passando como argumento o book e shelf para persistir no banco
@@ -70,15 +79,122 @@ class BooksApp extends React.Component {
   }
 
   render() {
-    const { booksFound, query } = this.state
-    const showingBooks = query === ''
-        ? booksFound.filter((b) => (b.title === ''))
-        : booksFound
-    return (
+      const { books, booksFound, query } = this.state
+      // Filtro para exibir os livros encontrados no método search
+      const showingBooks = query === ''
+          ? booksFound.filter(b => b.title === '')
+          : booksFound
+      // Filtro para buscar os livros das estantes pelo título
+      const filterBooks = query === ''
+          ? books
+          : books.filter(b => b.title.toLowerCase().includes(query.toLowerCase()))
 
-        <div>
-          <Route exact path='/' render={() => (
-              <div>
+      return (
+          <div>
+              <Route exact path='/' render={() => (
+                  <div>
+                      <div className="container navbar-header bg-white pt-3 pb-4">
+                          <div className="row">
+                              <a className="col-md-3 pb-2">MyReads</a>
+                              <input className="form-control col-md-4 ml-auto"
+                                     type="search"
+                                     placeholder="Filter by title..."
+                                     aria-label="Search"
+                                     value={this.state.query}
+                                     onChange={(event) => this.updateQuery(event.target.value)}
+                              >
+                              </input>
+                          </div>
+                      </div>
+
+                      <nav className="navbar navbar-light bg-white sticky-top">
+                          <div className='container'>
+                              <a className="btn navbar-btn" href='#currentlyReading'>Currently Reading</a>
+                              <a className="btn navbar-btn" href='#wantToRead'>Want To Read</a>
+                              <a className="btn navbar-btn" href='#read'>Read</a>
+                          </div>
+                      </nav>
+
+                      <div className='container mb-5'>
+                          {/*
+                            ScrollableAnchor: Foca nessa posição da página se o botão do navbar corresponder ao id
+                            isLoading: verifica se os dados da requisição já foram carregados
+                          */}
+                          <ScrollableAnchor id={'currentlyReading'}>
+                              <div>
+                                  <div className="row">
+                                      <h4 className="col-md-12 mt-3">Currently Reading</h4>
+                                      <hr className="col-md-12">
+                                      </hr>
+                                  </div>
+                                  {this.state.isLoading ?
+                                      <div>
+                                          <p className='text-muted'>Loading...</p>
+                                      </div> :
+                                      <ListBooks
+                                          books={filterBooks.filter((b) => (
+                                              b.shelf === 'currentlyReading'
+                                          ))}
+                                          onChangeShelf={this.changeShelf}
+                                      />
+                                  }
+                              </div>
+                          </ScrollableAnchor>
+
+                          <ScrollableAnchor id={'wantToRead'}>
+                              <div>
+                                  <div className="row">
+                                      <h4 className="col-md-12 mt-3">Want To Read</h4>
+                                      <hr className="col-md-12">
+                                      </hr>
+                                  </div>
+                                  {this.state.isLoading ?
+                                      <div>
+                                          <p className='text-muted'>Loading...</p>
+                                      </div> :
+                                      <ListBooks
+                                          books={filterBooks.filter((b) => (
+                                              b.shelf === 'wantToRead'
+                                          ))}
+                                          onChangeShelf={this.changeShelf}
+                                      />
+                                  }
+                              </div>
+                          </ScrollableAnchor>
+
+                          <ScrollableAnchor id={'read'}>
+                              <div>
+                                  <div className="row">
+                                      <h4 className="col-md-12 mt-3">Read</h4>
+                                      <hr className="col-md-12">
+                                      </hr>
+                                  </div>
+                                  {this.state.isLoading ?
+                                      <div>
+                                          <p className='text-muted'>Loading...</p>
+                                      </div> :
+                                      <ListBooks
+                                          books={filterBooks.filter((b) => (
+                                              b.shelf === 'read'
+                                          ))}
+                                          onChangeShelf={this.changeShelf}
+                                      />
+                                  }
+                              </div>
+                          </ScrollableAnchor>
+
+                          <div className="open-search">
+                              <Link
+                                  to='/search'
+                                  onClick={this.clearQuery}
+                              >Add a book
+                              </Link>
+                          </div>
+
+                      </div>
+
+
+                      {/*
                   <div className='app'>
                       <div className='list-books'>
                           <div className='list-books-title'>
@@ -131,45 +247,48 @@ class BooksApp extends React.Component {
                           </Link>
                       </div>
                   </div>
-              </div>
+                  */}
+                  </div>
 
-          )}/>
-          <Route path='/search' render={() => (
-              <div>
-                  <div className='app'>
-                      <div className="search-books">
-                          <div className="search-books-bar">
-                              <Link
-                                  to='/'
-                                  className="close-search"
-                              >Close
-                              </Link>
-                              <div className="search-books-input-wrapper">
+              )}/>
+              <Route path='/search' render={() => (
+                  <div>
+                          <div className="search-books">
+                              <div className="search-books-bar">
+                                  <Link
+                                      to='/'
+                                      className="close-search"
+                                      onClick={this.clearQuery}
+                                  >Close
+                                  </Link>
+                                  <div className="search-books-input-wrapper">
 
-                                  <input
-                                      className='search-books'
-                                      type='text'
-                                      placeholder='Search by title or author'
-                                      value={this.state.query}
-                                      onChange={(event) => this.updateQuery(event.target.value)}
+                                      <input
+                                          className='search-books'
+                                          type='text'
+                                          placeholder='Search by title or author'
+                                          value={this.state.query}
+                                          onChange={(event) => this.updateQuery(event.target.value)}
+                                      />
+
+                                  </div>
+                              </div>
+                              <div className='container mt-5 mb-5'>
+                              <div>
+                                  {JSON.stringify(this.state.query)}
+                                  <ListBooks
+                                      books={showingBooks}
+                                      onChangeShelf={this.changeShelf}
                                   />
-
+                              </div>
                               </div>
                           </div>
-                          <div className="search-books-results">
-                              {JSON.stringify(this.state.query)}
-                              <ListBooks
-                                  books={showingBooks}
-                                  onChangeShelf={this.changeShelf}
-                              />
-                          </div>
                       </div>
-                  </div>
-              </div>
-          )}/>
-        </div>
-    )
+              )}/>
+          </div>
+      )
   }
 }
+
 
 export default BooksApp

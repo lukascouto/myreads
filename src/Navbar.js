@@ -1,25 +1,20 @@
 import React from 'react'
-import {Link, Route} from "react-router-dom";
-import ListBooks from "./ListBooks";
 
 function Navbar () {
     return (
         <div>
-           <div className='app'>
-               <div className='list-books'>
-                   <div className='list-books-title'>
-                       <h1>MyReads</h1>
-                   </div>
-               </div>
 
-               <div className="open-search">
-                   <Link
-                       to='/search'
-                   >Add a book
-                   </Link>
-               </div>
-           </div>
-
+          <div className="jumbotron mb-0">
+              <h1>Teste</h1>
+              <p>Descrição teste</p>
+          </div>
+              <nav className="navbar navbar-light bg-white sticky-top">
+                  <div className='container'>
+                      <a className="navbar-link" href="#">Currently Reading</a>
+                      <a className="navbar-link" href="#">Want To Read</a>
+                      <a className="navbar-link" href="#">Read</a>
+                  </div>
+              </nav>
 
         </div>
     )
